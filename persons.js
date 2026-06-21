@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
 const app = express()
@@ -7,6 +8,9 @@ morgan.token('body', (req,res) =>  JSON.stringify(req.body))
 app.use(express.static('dist'))
 app.use(express.json())
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
+
+const Person = require('./models/person')
+
 
 let persons = 
 [
@@ -32,13 +36,11 @@ let persons =
     }
 ]
 
-app.get('/', (request, response) => {
-  response.send('<h1>Hello World!</h1>')
-})
-
 app.get("/api/persons", ((request, response) =>
     {
-      response.json(persons)
+      Person.find({}).then((persons) => {
+        response.json(persons)  
+      })
     }
   )
 )
@@ -83,25 +85,17 @@ app.post("/api/persons", ((request, response) =>
       return response.status(400).json({error: 'content missing'})
     }
 
-    if(persons.find((person) => person.name === body.name)){
-      return response.status(400).json({error: 'name exists'})
-    }
-
-
-    const newPerson = 
+    const newPerson = new Person(
     {
-      id: Math.round(Math.random() * 10000),
       name: body.name || '',
       number: body.number || ''
-    }
+    })
 
-    persons = persons.concat(newPerson)
-
-    response.json(newPerson)
+    newPerson.save().then((res) => {response.json(newPerson)})
   }
 ))
 
-const PORT = 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
