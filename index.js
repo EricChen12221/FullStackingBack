@@ -2,6 +2,9 @@ const express = require('express')
 const morgan = require('morgan')
 const app = express()
 
+
+const uri = "mongodb+srv://fullstack:pp@cluster0.k0chrxf.mongodb.net/?appName=Cluster0"
+
 morgan.token('body', (req,res) =>  JSON.stringify(req.body))
 
 app.use(express.static('dist'))
