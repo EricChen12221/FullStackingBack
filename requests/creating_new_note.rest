@@ -1,7 +1,7 @@
-POST http://localhost:3001/api/persons
+POST http://localhost:3001/api/notes
 Content-type: application/json
 
 {
-    "name": "VS code rest client is a pretty handy tool",
-    "number": "pp"
+    "content": "VS code rest client is a pretty handy tool",
+    "important": true
 }
