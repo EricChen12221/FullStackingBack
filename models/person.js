@@ -4,11 +4,11 @@ mongoose.set('strictQuery', false)
 
 const url = process.env.MONGODB_URI
 
-mongoose.connect(url, {family: 4})
-        .then((response) => {
-            console.log('Connection succeeded')})
-        .catch((error) => {
-            console.log('Connection failed')})
+mongoose.connect(url, { family: 4 })
+  .then((response) => {
+    console.log('Connection succeeded')})
+  .catch((error) => {
+    console.log('Connection failed')})
 
 const personSchema = mongoose.Schema(
   {
@@ -20,7 +20,7 @@ const personSchema = mongoose.Schema(
       type: String,
       minLength: 8,
       validate: (num) => {
-          return /^([0-9]{2}|[0-9]{3})-[0-9]+$/.test(num)
+        return /^([0-9]{2}|[0-9]{3})-[0-9]+$/.test(num)
       }
     }
   }
