@@ -1,7 +1,7 @@
 const personRouter = require('express').Router()
 const Person = require('../models/person')
 
-personRouter.get('/api/persons', ((request, response) =>
+personRouter.get('/', ((request, response) =>
 {
   Person.find({}).then((persons) => {
     response.json(persons)
@@ -10,7 +10,7 @@ personRouter.get('/api/persons', ((request, response) =>
 )
 )
 
-personRouter.get('/api/persons/:id', ((request, response, next) =>
+personRouter.get('/:id', ((request, response, next) =>
 {
   Person.findById(request.params.id).then(person => {
     if (person) {
@@ -23,17 +23,7 @@ personRouter.get('/api/persons/:id', ((request, response, next) =>
 }
 ))
 
-personRouter.get('/info', ((request, response) =>
-{
-  response.send(
-    `<p>Phonebook has info for some people</p>
-<p>${new Date().toString()}</p>`
-  )
-}
-)
-)
-
-personRouter.delete('/api/persons/:id', ((request, response, next) =>
+personRouter.delete('/:id', ((request, response, next) =>
 {
   Person.findByIdAndDelete(request.params.id).then(() =>
     response.status(204).end()
@@ -42,7 +32,7 @@ personRouter.delete('/api/persons/:id', ((request, response, next) =>
 }
 ))
 
-personRouter.put('/api/persons/:id', ((request, response, next) => {
+personRouter.put('/:id', ((request, response, next) => {
   const { name, number } = request.body
   console.log('hello')
   Person.findById(request.params.id).then(person => {
@@ -61,7 +51,7 @@ personRouter.put('/api/persons/:id', ((request, response, next) => {
 }
 ))
 
-personRouter.post('/api/persons', ((request, response, next) =>
+personRouter.post('/', ((request, response, next) =>
 {
   const body = request.body
 
