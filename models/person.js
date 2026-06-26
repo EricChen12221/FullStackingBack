@@ -2,14 +2,6 @@ const mongoose = require('mongoose')
 
 mongoose.set('strictQuery', false)
 
-const url = process.env.MONGODB_URI
-
-mongoose.connect(url, { family: 4 })
-  .then((response) => {
-    console.log('Connection succeeded')})
-  .catch((error) => {
-    console.log('Connection failed')})
-
 const personSchema = mongoose.Schema(
   {
     name: {
