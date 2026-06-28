@@ -22,7 +22,7 @@ const personSchema = new mongoose.Schema(
 
 const Person = mongoose.model('Person', personSchema)
 
-if(process.argv.length == 5){
+if(process.argv.length === 5){
   const person = new Person(
     {
       name: process.argv[3],

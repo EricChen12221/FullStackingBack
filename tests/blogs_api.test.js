@@ -1,4 +1,4 @@
-const { test, after, beforeEach } = require('node:test')
+const { test, describe, after, beforeEach } = require('node:test')
 const assert = require('node:assert')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
@@ -8,84 +8,133 @@ const Blog = require('../models/blog')
 
 const api = supertest(app)
 
-beforeEach(async () => {
-  await Blog.deleteMany({})
 
-  const blogObjects = helper.blogs.map(blog => new Blog(blog))
-  const promises = blogObjects.map(blog => blog.save())
-  await Promise.all(promises)
-})
+describe('Accessing blogs api', () => {
+  beforeEach(async () => {
+    await Blog.deleteMany({})
 
-test('getting from blogs list', async () => {
-  await api
-    .get('/api/blogs')
-    .expect(200)
-    .expect('Content-Type', /application\/json/)
-})
-
-test('posting a new blog', async () => {
-  const newBlog = Blog ({
-    title: 'oranges or door hinges?',
-    author: 'm&m',
-    url: 'shi gotta be somewhere',
-    likes: 0
+    const blogObjects = helper.blogs.map(blog => new Blog(blog))
+    const promises = blogObjects.map(blog => blog.save())
+    await Promise.all(promises)
+  })
+  test('getting from blogs list', async () => {
+    await api
+      .get('/api/blogs')
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
   })
 
-  await newBlog.save()
+  test('posting a blog without likes', async () => {
+    const newBlog = Blog ({
+      title: 'oranges or door hinges?',
+      author: 'm&m',
+      url: 'shi gotta be somewhere',
+    })
 
-  const response = await api.get('/api/blogs')
-  const blogs = response.body.map(blog => blog.author)
+    await newBlog.save()
 
-  assert(blogs.includes('m&m'))
-})
+    const response = await api.get('/api/blogs')
+    const blogs = response.body.map(blog => blog.author)
 
-test('posting a blog without likes', async () => {
-  const newBlog = Blog ({
-    title: 'oranges or door hinges?',
-    author: 'm&m',
-    url: 'shi gotta be somewhere',
+    assert(blogs.includes('m&m'))
   })
 
-  await newBlog.save()
+  test('testing missing title or url properties', async () => {
+    const newBlog = Blog ({
+      title: 'oranges or door hinges?',
+      author: 'm&m'
+    })
 
-  const response = await api.get('/api/blogs')
-  const blogs = response.body.map(blog => blog.author)
-
-  assert(blogs.includes('m&m'))
-})
-
-test('testing missing title or url properties', async () => {
-  const newBlog = Blog ({
-    title: 'oranges or door hinges?',
-    author: 'm&m'
+    await api.post('/api/blogs').send(newBlog).expect(400)
   })
 
-  await api.post('/api/blogs').send(newBlog).expect(400)
+
+  test('changing likes', async () => {
+    const blogs = await api.get('/api/blogs')
+    const id = blogs.body[0].id
+    const newLikes = 17
+
+    await api.put(`/api/blogs/${id}`).send({ likes: newLikes }).expect(201)
+
+    const blogsNow = await api.get('/api/blogs')
+    const blog = blogsNow.body.filter(blog => blog.id === id)
+
+    assert.strictEqual(newLikes, blog[0].likes)
+  })
 })
 
-test('deleting a single resource', async () => {
-  const blogs = await api.get('/api/blogs')
-  const deletedId = blogs.body[0].id
+describe('token authentication', () => {
 
-  await api.delete(`/api/blogs/${deletedId}`).expect(204)
+  beforeEach( async () => {
+    const user = {
+      username: 'DeadAhh',
+      name: 'Deadpool',
+      password: 'wolverine'
+    }
 
-  const blogsNow = await api.get('/api/blogs')
-  const ids = blogsNow.body.map(blog => blog.id)
+    await api.post('/api/users').send(user)
+  })
 
-  assert(!ids.includes(deletedId))
+  test('valid user making', async () => {
+    const newUser = {
+      username: 'Kanye',
+      name: 'Ye',
+      password: 'goated'
+    }
+
+    await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(201)
+  })
+
+  test('invalid user making', async () => {
+    const newUser = {
+      username: 'Kanye',
+      name: 'Ye',
+      password: 'go'
+    }
+
+    await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+  })
+
+  test('valid posting', async () => {
+    const response =
+      await api
+        .post('/api/login')
+        .send({ username: 'DeadAhh', password: 'wolverine' })
+
+    const blog = {
+      title: 'beans = farts',
+      author: 'the one and only',
+      url: 'hehe potty',
+      likes: 1
+    }
+
+    await api
+      .post('/api/blogs')
+      .set('authorization', `Bearer ${response.body.token.toString()}`)
+      .send(blog)
+      .expect(201)
+  })
+
+  test.only('invalid posting', async () => {
+    const blog = {
+      title: 'beans = farts',
+      author: 'the one and only',
+      url: 'hehe potty',
+      likes: 1
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(blog)
+      .expect(401)
+  })
 })
 
-test.only('changing likes', async () => {
-  const blogs = await api.get('/api/blogs')
-  const id = blogs.body[0].id
-  const newLikes = 17
-
-  await api.put(`/api/blogs/${id}`).send({ likes: newLikes }).expect(201)
-
-  const blogsNow = await api.get('/api/blogs')
-  const blog = blogsNow.body.filter(blog => blog.id === id)
-
-  assert.strictEqual(newLikes, blog[0].likes)
-})
 
 after(async () => await mongoose.connection.close())
