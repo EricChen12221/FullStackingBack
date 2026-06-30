@@ -47,7 +47,7 @@ blogsRouter.delete('/:id', async (request, response) => {
 })
 
 blogsRouter.put('/:id', async (request, response) => {
-  let blog = await Blog.findById(request.params.id)
+  let blog = await Blog.findById(request.params.id).populate('user', { username: 1, name: 1 })
 
   blog.likes = request.body.likes
   await blog.save()
